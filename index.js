@@ -12,41 +12,49 @@ export default function Excelix() {
 
   XLSX.utils.book_append_sheet(wb, ws, 'transactions')
   
-  this.addHeader = (header) => {
-    // const row = [{ v: header, t: 's', s: { font: { bold: true }}}]
-    // XLSX.utils.aoa_to_sheet([row])
-    XLSX.utils.sheet_add_aoa(ws, [[header]], 
+  this.addRow = (row, { bold, inline=false, r=headersCount, c=0 }={}) => {
+    XLSX.utils.sheet_add_aoa(ws, [row], 
       { origin: 
         { 
-          r: headersCount,
-          c: 0
+          r: r,
+          c: c
         } 
       })
 
-    const cellRef = XLSX.utils.encode_cell({r:headersCount,c:0})
-    ws[cellRef].s = {font: {bold: true}}
+    const cellRef = XLSX.utils.encode_cell({r:headersCount,c:c})
+    ws[cellRef].s = {font: {bold}}
 
     headersCount += 1
+    //headersCount += inline ? 1 : 0 
 
   }
 
 
   
   this.addJson = (jsonData) => {
-    const totalKeys = Object.keys(this.totalFields)
-    const jsonColumns = Object.keys(jsonData[0])
-    XLSX.utils.sheet_add_aoa(ws, [jsonColumns],
-      {
-        origin:
-        {
-          r: headersCount,
-          c: 0
-        }
-      })
+    if (!Array.isArray(jsonData)) {
+      console.error('JSON data must be array')
+      return
+    }
+    
+    const filteredJsonData = filterJSONObjects(jsonData, 
+      this.totalFields)  
+    const titles = Object.keys(filteredJsonData[0])
+    
+    // add titles
+    console.log(titles)
+    console.log(this.totalFields)
+    
+    const titlesFormatted = []
+    titles.forEach(e => {
+       titlesFormatted.push(this.totalFields[e].text || e)
+    })
 
-    headersCount += 1
+    console.log(titlesFormatted)
+    this.addRow(titlesFormatted) 
 
-    XLSX.utils.sheet_add_json(ws, jsonData,
+    // add json data
+    XLSX.utils.sheet_add_json(ws, filteredJsonData,
       { origin:
         {
           r: headersCount,
@@ -55,72 +63,33 @@ export default function Excelix() {
         skipHeader: true
 
       })
-    headersCount += Object.keys(jsonData).length
+
+    headersCount += Object.keys(filteredJsonData).length
 
     if (this.totalFields) {
+      this.addRow(['ИТОГО'], { bold: true })
+      const sums = [] 
+      titles.forEach((c, i) => {
+        const isTotal = this.totalFields[c].total
 
+        if (!isTotal) {
+          sums.push(undefined)
+          return
+        }
 
-      // add Total title
-      XLSX.utils.sheet_add_aoa(ws, [['Итого']],
-        {
-          origin:
-          {
-            r: headersCount,
-            c: 0
+        let sum = 0
+        filteredJsonData.forEach(data => {
+          if (!isNaN(data[c])) {
+            sum += data[c]
           }
         })
 
-      headersCount += 1
+        sums.push(sum)
 
-      // add Total values for each column 
-      // in totalFields
-      jsonColumns.forEach((c, i) => {
-        console.log(c)
-        // проверяем, если есть поле 
-        // если есть, смотрим, нужно ли суммировать поле
-        if (totalKeys.includes(c) && this.totalFields[c].total) {
-          let sum = 0
-          jsonData.forEach(d => {
-            if (!isNaN(d[c])) {
-              sum += d[c]
-            }
-          })
-
-          XLSX.utils.sheet_add_aoa(ws, [[sum]], 
-            { origin: 
-              {
-                r: headersCount,
-                c: i 
-
-              }
-            })
-
-          const cellRef = XLSX.utils.encode_cell({r:headersCount,c:i})
-          ws[cellRef].s = {font: {bold: true}}
-
-        }
       })
-      
-      headersCount += 1
+      this.addRow(sums, { bold: true })
     }
-
   }
-
-  this.addFooter = (footer) => {
-    XLSX.utils.sheet_add_aoa(ws, [[footer]], 
-      { origin: 
-        { 
-          r: headersCount,
-          c: 0
-        } 
-      })
-    
-    const cellRef = XLSX.utils.encode_cell({r:headersCount,c:0})
-    ws[cellRef].s = {font: {bold: true}}
-
-    headersCount += 1
-  }
-
 
   this.addTotalFields = (totalFields) => {
     this.totalFields = totalFields
@@ -133,5 +102,17 @@ export default function Excelix() {
     })
     download(data, filename) 
   }
+
+  this.writeToLocalFile = (filename) => {
+    XLSX.writeFile(wb, filename)
+  }
 }
+
+const filterJSONObjects = (jsonObjects, keys) =>
+  jsonObjects.map(obj =>
+    Object.keys(keys).reduce((filteredObj, key) => {
+      if (key in obj) filteredObj[key] = obj[key];
+      return filteredObj;
+    }, {})
+  );
 
