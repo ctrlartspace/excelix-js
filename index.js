@@ -22,6 +22,7 @@ export default function Excelix() {
       })
 
     const cellRef = XLSX.utils.encode_cell({r:headersCount,c:c})
+    console.log('style:', r, c)
     ws[cellRef].s = {font: {bold}}
 
     headersCount += 1
