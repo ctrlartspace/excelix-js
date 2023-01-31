@@ -13,6 +13,7 @@ export default function Excelix() {
   XLSX.utils.book_append_sheet(wb, ws, 'transactions')
   
   this.addRow = (row, { bold, inline=false, r=headersCount, c=0 }={}) => {
+    console.log('add row: ', row)
     XLSX.utils.sheet_add_aoa(ws, [row], 
       { origin: 
         { 
