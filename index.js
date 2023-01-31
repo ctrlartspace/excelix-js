@@ -170,4 +170,3 @@ async function main2() {
   ex.writeToFile('test.xlsx')
 }
 
-main2()
