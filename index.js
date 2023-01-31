@@ -1,5 +1,7 @@
 import XLSX from 'xlsx-js-style'
 import axios from 'axios'
+import download from 'downloadjs'
+import fs from 'fs'
 
 
 export default function Excelix() {
@@ -127,7 +129,12 @@ export default function Excelix() {
   }
 
   this.writeToFile = (filename) => {
-    XLSX.writeFile(wb, filename)
+    const data = XLSX.write(wb)
+    try {
+      fs.writeFileSync(filename, data)
+    } catch (err) {
+      console.error(err)
+    }
   }
 
 
