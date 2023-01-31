@@ -75,7 +75,7 @@ export default function Excelix() {
         const isTotal = this.totalFields[c].total
 
         if (!isTotal) {
-          sums.push(undefined)
+          sums.push("")
           return
         }
 
@@ -89,7 +89,7 @@ export default function Excelix() {
         sums.push(sum)
 
       })
-      this.addRow(sums, { bold: true })
+      this.addRow(sums)
     }
   }
 
