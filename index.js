@@ -129,12 +129,16 @@ export default function Excelix() {
   }
 
   this.writeToFile = (filename) => {
-    const data = XLSX.write(wb)
-    try {
-      fs.writeFileSync(filename, data)
-    } catch (err) {
-      console.error(err)
-    }
+    const data = XLSX.write(wb, {
+      type: 'buffer',
+      cellStyles: true
+    })
+    download(data, filename) 
+    //try {
+    //  fs.writeFileSync(filename, data)
+    //} catch (err) {
+    //  console.error(err)
+    //}
   }
 
 
@@ -162,18 +166,20 @@ async function main() {
 }
 
 
-async function main2() {
+function main2() {
   const ex = new Excelix() 
   ex.addHeader('test')
   ex.addHeader('test2')
-  const jsonData = await getData()
+  //const jsonData = await getData()
   const totalFields = {}
   totalFields.id = { text: 'ID', total: true }
   totalFields.title = { text: 'Название' }
   ex.addTotalFields(totalFields)
-  ex.addJson(jsonData)
+  //ex.addJson(jsonData)
   ex.addFooter('footer')
   ex.addFooter('footer')
   ex.writeToFile('test.xlsx')
 }
 
+
+main2()
