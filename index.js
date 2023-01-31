@@ -51,7 +51,7 @@ export default function Excelix() {
     })
 
     console.log(titlesFormatted)
-    this.addRow(titlesFormatted) 
+    this.addRow(titlesFormatted, { bold: true }) 
 
     // add json data
     XLSX.utils.sheet_add_json(ws, filteredJsonData,
