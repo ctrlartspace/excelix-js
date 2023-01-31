@@ -1,7 +1,5 @@
 import XLSX from 'xlsx-js-style'
-import axios from 'axios'
 import download from 'downloadjs'
-import fs from 'fs'
 
 
 export default function Excelix() {
@@ -134,52 +132,6 @@ export default function Excelix() {
       cellStyles: true
     })
     download(data, filename) 
-    //try {
-    //  fs.writeFileSync(filename, data)
-    //} catch (err) {
-    //  console.error(err)
-    //}
   }
-
-
-
 }
 
-async function getData() {
-  const url = 'https://jsonplaceholder.typicode.com/todos'
-  const res = await axios.get(url)
-  return res.data
-}
-
-
-async function main() {
-  const data = await getData()
-  
-  const wb = XLSX.utils.book_new()
-  const ws = XLSX.utils.json_to_sheet([{}])
-  XLSX.utils.sheet_add_json(ws, [{}], { header: ['1', '2', '3'], origin: 'A1' })
-  XLSX.utils.sheet_add_json(ws, data, { origin: 'A2' })
-  XLSX.utils.book_append_sheet(wb, ws, 'transactions')
-
-  XLSX.writeFile(wb, 'trans.xlsx')
-
-}
-
-
-function main2() {
-  const ex = new Excelix() 
-  ex.addHeader('test')
-  ex.addHeader('test2')
-  //const jsonData = await getData()
-  const totalFields = {}
-  totalFields.id = { text: 'ID', total: true }
-  totalFields.title = { text: 'Название' }
-  ex.addTotalFields(totalFields)
-  //ex.addJson(jsonData)
-  ex.addFooter('footer')
-  ex.addFooter('footer')
-  ex.writeToFile('test.xlsx')
-}
-
-
-main2()
