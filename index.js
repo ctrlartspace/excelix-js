@@ -2,7 +2,7 @@ import XLSX from 'xlsx-js-style'
 import axios from 'axios'
 
 
-function Excelix() {
+export default function Excelix() {
   let _this = this;
   let headersCount = 0
   let totalFields = null 
