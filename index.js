@@ -2,58 +2,53 @@ import XLSX from 'xlsx-js-style'
 import download from 'downloadjs'
 
 
-export default function Excelix() {
+export default function Excelix(fields) {
   let _this = this;
   let headersCount = 0
-  let totalFields = null 
+
+  if (!fields) {
+    console.error('Please, add fields to constructor')
+    return
+  }
 
   const wb = XLSX.utils.book_new()
   const ws = XLSX.utils.json_to_sheet([{}])
 
-  XLSX.utils.book_append_sheet(wb, ws, 'transactions')
+  XLSX.utils.book_append_sheet(wb, ws, 'sheet')
   
-  this.addRow = (row, { bold, inline=false, r=headersCount, c=0 }={}) => {
-    console.log('add row: ', row)
-    XLSX.utils.sheet_add_aoa(ws, [row], 
-      { origin: 
-        { 
-          r: r,
-          c: c
-        } 
-      })
+  _this.addRow = (row, { bold, inline=false, r=headersCount, c=0 }={}) => {
+    XLSX.utils.sheet_add_aoa(ws, [row], { origin: { r: r, c: c } })
 
-    const cellRef = XLSX.utils.encode_cell({r:headersCount,c:c})
-    console.log('style:', r, c)
-    ws[cellRef].s = {font: {bold}}
+    if (Array.isArray(row)) {
+      row.forEach((r, i) => {
+        const cell = XLSX.utils.encode_cell({r:headersCount,c: i})
+        ws[cell].s = {font: {bold}}
+      })
+    } else {
+      const cellRef = XLSX.utils.encode_cell({r:headersCount,c:c})
+      ws[cellRef].s = {font: {bold}}
+    }
 
     headersCount += 1
-    //headersCount += inline ? 1 : 0 
-
   }
 
 
-  
-  this.addJson = (jsonData) => {
+  _this.addJson = (jsonData) => {
     if (!Array.isArray(jsonData)) {
       console.error('JSON data must be array')
       return
     }
     
-    const filteredJsonData = filterJSONObjects(jsonData, 
-      this.totalFields)  
+    const filteredJsonData = filterJSONObjects(jsonData, fields)  
     const titles = Object.keys(filteredJsonData[0])
     
     // add titles
-    console.log(titles)
-    console.log(this.totalFields)
-    
     const titlesFormatted = []
     titles.forEach(e => {
-       titlesFormatted.push(this.totalFields[e].text || e)
+       titlesFormatted.push(fields[e].text || e)
     })
 
-    console.log(titlesFormatted)
-    this.addRow(titlesFormatted, { bold: true }) 
+    _this.addRow(titlesFormatted, { bold: true }) 
 
     // add json data
     XLSX.utils.sheet_add_json(ws, filteredJsonData,
@@ -63,41 +58,39 @@ export default function Excelix() {
           c: 0
         },
         skipHeader: true
-
       })
 
     headersCount += Object.keys(filteredJsonData).length
 
-    if (this.totalFields) {
-      this.addRow(['ИТОГО'], { bold: true })
-      const sums = [] 
-      titles.forEach((c, i) => {
-        const isTotal = this.totalFields[c].total
 
-        if (!isTotal) {
-          sums.push("")
-          return
+    // add summaries
+
+    const sums = [] 
+
+    titles.forEach((c, i) => {
+      const isTotal = fields[c].total
+
+      if (!isTotal) {
+        sums.push("")
+        return
+      }
+
+      let sum = 0
+      filteredJsonData.forEach(data => {
+        if (!isNaN(data[c])) {
+          sum += data[c]
         }
-
-        let sum = 0
-        filteredJsonData.forEach(data => {
-          if (!isNaN(data[c])) {
-            sum += data[c]
-          }
-        })
-
-        sums.push(sum)
-
       })
-      this.addRow(sums)
-    }
+
+      sums.push(sum)
+      sums[0] = 'ИТОГО'
+
+    })
+    _this.addRow(sums, {bold: true})
   }
 
-  this.addTotalFields = (totalFields) => {
-    this.totalFields = totalFields
-  }
 
-  this.writeToFile = (filename) => {
+  _this.writeToFile = (filename) => {
     const data = XLSX.write(wb, {
       type: 'buffer',
       cellStyles: true
@@ -105,7 +98,7 @@ export default function Excelix() {
     download(data, filename) 
   }
 
-  this.writeToLocalFile = (filename) => {
+  _this.writeToLocalFile = (filename) => {
     XLSX.writeFile(wb, filename)
   }
 }
