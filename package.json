@@ -1,7 +1,7 @@
 {
   "name": "excelix-js",
   "version": "1.0.0",
-  "description": "",
+  "description": "library for export data to excel(.xlsx) from JSON",
   "main": "index.js",
   "type": "module",
   "scripts": {
